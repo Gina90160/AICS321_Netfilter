@@ -74,17 +74,47 @@ static struct nf_hook_ops b_drop __read_mostly = {
 
 static int __init firewall_init(void)
 {
-    return 0;
+	printk(KERN_INFO "System: Initializing the firewall\n");
+
+	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
+	if (majorNumber < 0) {
+		printk(KERN_ALERT "Failed\n");
+		return majorNumber;
+	}
+
+	fireclass = class_create(THIS_MODULE, CLASS_NAME);
+	if (IS_ERR(fireclass)) {  
+		printk(KERN_ALERT "Failed\n");         
+		unregister_chrdev(majorNumber, DEVICE_NAME);
+		return PTR_ERR(fireclass);
+	}
+
+	firewall = device_create(fireclass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+	if (IS_ERR(firewall)) {              
+		printk(KERN_ALERT "Failed\n");
+		class_destroy(fireclass);           
+		unregister_chrdev(majorNumber, DEVICE_NAME);
+		return PTR_ERR(firewall);
+	}
+
+	return  0;
 }
 
 static void __exit firewall_exit(void)
 {
-    return 0;
+    device_destroy(fireclass, MKDEV(majorNumber, 0));   
+	class_unregister(fireclass);                         
+	class_destroy(fireclass);                    
+	unregister_chrdev(majorNumber, DEVICE_NAME); 
+    nf_unregister_net_hook(&init_net,&w_drop); 
+    nf_unregister_net_hook(&init_net,&b_drop);
 }
 
 static int mydev_open(struct inode *inodep, struct file *filep)
 {
-    return 0;
+    i = 0;
+   	printk(KERN_INFO "firewall: Device has been opened \n");
+   	return 0;
 }
 
 static ssize_t mydev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
