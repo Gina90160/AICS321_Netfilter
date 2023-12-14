@@ -112,7 +112,7 @@ static void __exit firewall_exit(void)
 
 static int mydev_open(struct inode *inodep, struct file *filep)
 {
-    i = 0;
+    ip_count = 0;
    	printk(KERN_INFO "opened \n");
    	return 0;
 }
@@ -161,7 +161,50 @@ unsigned int b_hook(unsigned int hooknum, struct sk_buff *skb,
                     const struct net_device *in, const struct net_device *out,
                     int (*okfn)(struct sk_buff *))
 {
-    return 0;
+    struct udphdr *udp_header;
+    struct tcphdr *tcp_header;
+    unsigned int dest_port, source_port;
+    struct sk_buff *sock_buff;
+    struct iphdr *ip_header;
+    sock_buff = skb;
+    ip_header = (struct iphdr *)skb_network_header(sock_buff);
+    static char  myipb[256];
+    ip_header = (struct iphdr *)skb_network_header(sock_buff);
+    
+    if(!sock_buff) { 
+        return NF_DROP;
+    }
+
+    snprintf(myipb, 16, "%pI4", &ip_header->saddr);
+    if (ip_header->protocol == 17) {
+        udp_header = (struct udphdr *)(skb_transport_header(skb));
+        source_port = (unsigned int)ntohs(udp_header->source);
+        dest_port = (unsigned int)ntohs(udp_header->dest);
+    } 
+    else if(ip_header->protocol == 6) {
+        tcp_header = (struct tcphdr *)(skb_transport_header(skb));
+        source_port = (unsigned int)ntohs(tcp_header->source);
+        dest_port = (unsigned int)ntohs(tcp_header->dest);
+    }
+    else {
+        source_port=0;
+        dest_port=0;
+    }
+
+    for (k = 1; k < ip_count ; ++k)
+        {
+            if(strncmp(myipb,ips[k],strlen(myipb)) == 0){
+                printk(KERN_INFO "src_ip: %pI4 ** src port: %d\n", &ip_header->saddr,source_port);
+                printk(KERN_INFO "dst_ip: %pI4 ** dst port :%d\n", &ip_header->daddr,dest_port);
+                return NF_DROP;
+            }
+
+            else if(strncmp(myipb,ips[k],strlen(myipb)) != 0) {
+                printk(KERN_INFO "src_ip: %pI4 ** src port: %d\n", &ip_header->saddr,source_port);
+                printk(KERN_INFO "dst_ip: %pI4 ** dst port :%d\n", &ip_header->daddr,dest_port);
+                return NF_ACCEPT;
+            }
+        }
 }
 
 unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
