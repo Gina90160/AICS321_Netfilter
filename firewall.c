@@ -211,7 +211,51 @@ unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
                     const struct net_device *in, const struct net_device *out,
                     int (*okfn)(struct sk_buff *))
 {
-    return 0;
+    struct udphdr *udp_header;
+    struct tcphdr *tcp_header;
+    unsigned int dest_port, source_port;
+    struct sk_buff *sock_buff;
+    struct iphdr *ip_header;
+    sock_buff = skb;
+    ip_header = (struct iphdr *)skb_network_header(sock_buff);
+    static char myip[256];
+    ip_header = (struct iphdr *)skb_network_header(sock_buff);
+
+    if(!sock_buff) { 
+        return NF_DROP;
+    }
+
+    snprintf(myip, 16, "%pI4", &ip_header->saddr);
+
+    if (ip_header->protocol == 17) {      //if protocol is UDP
+        udp_header = (struct udphdr *)(skb_transport_header(skb));
+        source_port = (unsigned int)ntohs(udp_header->source);
+        dest_port = (unsigned int)ntohs(udp_header->dest);
+    } 
+    else if(ip_header->protocol == 6) {   //if protocol is TCP
+        tcp_header = (struct tcphdr *)(skb_transport_header(skb));
+        source_port = (unsigned int)ntohs(tcp_header->source);
+        dest_port = (unsigned int)ntohs(tcp_header->dest);
+    }
+    else {
+        source_port = 0;
+        dest_port = 0;
+    }
+
+    for ( k = 0; k < i ; ++k)
+    {
+        if(strncmp(myip,ips[k],strlen(myip)) != 0) {
+            printk(KERN_INFO "src ip: %pI4 ** src port: %d\n", &ip_header->saddr,source_port);
+            printk(KERN_INFO "dst ip: %pI4\n", &ip_header->daddr);
+            return NF_DROP;
+        }
+
+        else if(strncmp(myip,ips[k],strlen(myip)) == 0) {
+            printk(KERN_INFO "src ip: %pI4 ** src port: %d\n", &ip_header->saddr,source_port);
+            printk(KERN_INFO "dst ip: %pI4\n", &ip_header->daddr);
+            return NF_ACCEPT;
+        }
+    }
 }
 
 module_init(firewall_init);
