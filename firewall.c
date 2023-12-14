@@ -19,7 +19,7 @@
 #define DEVICE_NAME "firewall"
 #define CLASS_NAME "fireclass"
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("System");
 MODULE_AUTHOR("Gina, Sumin");
 MODULE_DESCRIPTION("FireWall");
 MODULE_VERSION("0.0");
@@ -74,8 +74,6 @@ static struct nf_hook_ops b_drop __read_mostly = {
 
 static int __init firewall_init(void)
 {
-	printk(KERN_INFO "System: Initializing the firewall\n");
-
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
 	if (majorNumber < 0) {
 		printk(KERN_ALERT "Failed\n");
@@ -97,6 +95,8 @@ static int __init firewall_init(void)
 		return PTR_ERR(firewall);
 	}
 
+    printk(KERN_INFO "Init Success\n");
+
 	return  0;
 }
 
@@ -113,7 +113,7 @@ static void __exit firewall_exit(void)
 static int mydev_open(struct inode *inodep, struct file *filep)
 {
     i = 0;
-   	printk(KERN_INFO "firewall: Device has been opened \n");
+   	printk(KERN_INFO "opened \n");
    	return 0;
 }
 
