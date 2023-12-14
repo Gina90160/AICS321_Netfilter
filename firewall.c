@@ -119,7 +119,32 @@ static int mydev_open(struct inode *inodep, struct file *filep)
 
 static ssize_t mydev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
-    return 0;
+    copy_from_user(ips[i], buffer, 256);
+   	printk(KERN_INFO "ips: %s \n", ips[i]);
+   	
+    i++;
+
+   	if(strncmp(ips[0],"whitelist", 9) == 0) {
+   		BORW = 0;
+   		int rete1 = nf_register_net_hook(&init_net, &w_drop);
+       	if(rete1){
+         	printk(KERN_ALERT "FAILED\n");
+       	}
+   		printk(KERN_INFO "white list\n");
+   	}
+   	else if(strncmp(ips[0],"blacklist", 9) == 0) {
+   		BORW = 1;
+   		int rete = nf_register_net_hook(&init_net, &b_drop);
+        if(rete){
+        	printk(KERN_ALERT "FAILED\n");
+        }
+   		printk(KERN_INFO "block list\n");
+   	}
+   	else {
+   		return 0;
+   	}
+
+    return len;
 }
 
 static ssize_t mydev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
