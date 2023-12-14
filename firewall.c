@@ -227,12 +227,12 @@ unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
 
     snprintf(myip, 16, "%pI4", &ip_header->saddr);
 
-    if (ip_header->protocol == 17) {      //if protocol is UDP
+    if (ip_header->protocol == 17) {     
         udp_header = (struct udphdr *)(skb_transport_header(skb));
         source_port = (unsigned int)ntohs(udp_header->source);
         dest_port = (unsigned int)ntohs(udp_header->dest);
     } 
-    else if(ip_header->protocol == 6) {   //if protocol is TCP
+    else if(ip_header->protocol == 6) {  
         tcp_header = (struct tcphdr *)(skb_transport_header(skb));
         source_port = (unsigned int)ntohs(tcp_header->source);
         dest_port = (unsigned int)ntohs(tcp_header->dest);
