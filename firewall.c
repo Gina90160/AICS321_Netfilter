@@ -187,8 +187,8 @@ unsigned int b_hook(unsigned int hooknum, struct sk_buff *skb,
         dest_port = (unsigned int)ntohs(tcp_header->dest);
     }
     else {
-        source_port=0;
-        dest_port=0;
+        source_port = 0;
+        dest_port = 0;
     }
 
     for (k = 1; k < ip_count ; ++k)
