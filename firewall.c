@@ -19,7 +19,7 @@
 #define DEVICE_NAME "firewall"
 #define CLASS_NAME "fireclass"
 
-MODULE_LICENSE("System");
+MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Gina, Sumin");
 MODULE_DESCRIPTION("FireWall");
 MODULE_VERSION("0.0");
@@ -28,7 +28,9 @@ MODULE_VERSION("0.0");
 #define MAX_IP_LENGTH 256
 
 static char ips[MAX_IP_COUNT][MAX_IP_LENGTH];
-static int ip_count = 0;
+static unsigned int ip_count = 0;
+
+static unsigned int k = 0;
 
 static int majorNumber;
 static struct class *fireclass = NULL;
@@ -119,10 +121,10 @@ static int mydev_open(struct inode *inodep, struct file *filep)
 
 static ssize_t mydev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
-    copy_from_user(ips[i], buffer, 256);
-   	printk(KERN_INFO "ips: %s \n", ips[i]);
+    copy_from_user(ips[ip_count], buffer, 256);
+   	printk(KERN_INFO "ips: %s \n", ips[ip_count]);
    	
-    i++;
+    ip_count++;
 
    	if(strncmp(ips[0],"whitelist", 9) == 0) {
    		BORW = 0;
@@ -205,6 +207,7 @@ unsigned int b_hook(unsigned int hooknum, struct sk_buff *skb,
                 return NF_ACCEPT;
             }
         }
+    return 0;
 }
 
 unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
@@ -242,7 +245,7 @@ unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
         dest_port = 0;
     }
 
-    for ( k = 0; k < i ; ++k)
+    for ( k = 0; k < ip_count ; ++k)
     {
         if(strncmp(myip,ips[k],strlen(myip)) != 0) {
             printk(KERN_INFO "src ip: %pI4 ** src port: %d\n", &ip_header->saddr,source_port);
@@ -256,6 +259,7 @@ unsigned int w_hook(unsigned int hooknum, struct sk_buff *skb,
             return NF_ACCEPT;
         }
     }
+    return 0;
 }
 
 module_init(firewall_init);
